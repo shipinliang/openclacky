@@ -291,6 +291,16 @@ RSpec.describe Clacky::Providers do
       end
     end
 
+    context "GLM-5.2 in the model lineup" do
+      it "includes glm-5.2 in the available models" do
+        expect(described_class.models("glm")).to include("glm-5.2")
+      end
+
+      it "keeps glm-5.1 as the default model" do
+        expect(described_class.default_model("glm")).to eq("glm-5.1")
+      end
+    end
+
     context "Volcengine Ark (Doubao) three endpoints" do
       # Regression guard: Ark base_urls (Pay-as-you-go / Coding Plan / Agent
       # Plan) must resolve to the volcengine-ark preset so text-only models
