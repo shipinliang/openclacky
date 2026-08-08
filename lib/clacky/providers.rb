@@ -306,10 +306,12 @@ module Clacky
       "kimi-coding" => {
         "name" => "Kimi Code (Coding Plan)",
         # Subscription-billed Kimi Code endpoint — separate product from the
-        # PAYG Moonshot Open Platform (api.moonshot.cn/v1 / .ai/v1). Uses the
-        # unified `kimi-for-coding` model alias which the Coding Plan backend
-        # routes to the appropriate K2 variant (Kimi-k2.6 today; 262K context,
-        # 32K max output, supports vision/video/reasoning).
+        # PAYG Moonshot Open Platform (api.moonshot.cn/v1 / .ai/v1). Uses
+        # four model IDs provided by the Coding Plan:
+        #   - kimi-for-coding: K2.7 Code, all membership tiers, 256K context
+        #   - kimi-for-coding-highspeed: K2.7 Code high-speed, Allegretto+
+        #   - k3: Kimi K3 flagship, Moderato+ (1M context for Allegretto+)
+        #   - k3-256k: Kimi K3 256K context, Moderato+ (lighter token cost)
         #
         # Why anthropic-messages: Moonshot exposes the Coding Plan via two
         # URLs on the same domain — an Anthropic-format endpoint at
@@ -333,10 +335,9 @@ module Clacky
         # Source: https://www.kimi.com/code/docs/third-party-tools/other-coding-agents.html
         "base_url" => "https://api.kimi.com/coding",
         "api" => "anthropic-messages",
-        "default_model" => "kimi-for-coding",
-        "models" => ["kimi-for-coding"],
-        # K2.6 backend behind the alias is multimodal (image + video input,
-        # reasoning). Same vision capability as the PAYG kimi preset.
+        "default_model" => "k3-256k",
+        "models" => ["k3-256k", "k3", "kimi-for-coding", "kimi-for-coding-highspeed"],
+        # K3 and K2.7 Code are multimodal (image + video input, reasoning).
         "capabilities" => { "vision" => true }.freeze,
         "website_url" => "https://www.kimi.com/code"
       }.freeze,
@@ -355,7 +356,7 @@ module Clacky
         "name" => "MiMo (Xiaomi)",
         "base_url" => "https://api.xiaomimimo.com/v1",
         "api" => "openai-completions",
-        "default_model" => "mimo-v2.5-pro",
+        "default_model" => "mimo-v2.5",
         # The MiMo-V2 family (mimo-v2-pro / mimo-v2-omni) was retired on
         # 2026-06-30 and the model ids are no longer accepted by the API. The
         # current lineup is the V2.5 series:
@@ -387,7 +388,7 @@ module Clacky
         "name" => "GLM (Z.ai / Zhipu)",
         "base_url" => "https://open.bigmodel.cn/api/paas/v4",
         "api" => "openai-completions",
-        "default_model" => "glm-5.2",
+        "default_model" => "glm-5-turbo",
         "models" => ["glm-5.2", "glm-5.1", "glm-5", "glm-5-turbo", "glm-5v-turbo", "glm-4.7"],
         # Zhipu / Z.ai expose four functionally-equivalent endpoints:
         # two regional sites (mainland open.bigmodel.cn + international api.z.ai)
@@ -612,7 +613,8 @@ module Clacky
     # Entries are matched top-to-bottom; the first match wins. Models not
     # listed here fall back to the global default.
     MODEL_MAX_OUTPUT = [
-      { pattern: /glm/i,           limit: 65_536 }, # GLM-5.2: 128K output ceiling; 64K ample for reasoning+answer
+      { pattern: /glm/i,           limit: 131_072 }, # GLM-5.2: official 128K output ceiling (verified accepted)
+      { pattern: /\Ak3/i,          limit: 65_536 }, # Kimi Code K3 (Coding Plan): same 1M ceiling; 64K ample
       { pattern: /kimi-k3/i,       limit: 65_536 }, # Kimi K3: max_completion_tokens=131072 (max 1M); 64K ample
       { pattern: /mimo-v2\.5-pro/i, limit: 65_536 }, # MiMo-V2.5-Pro: max_completion_tokens=131072; 64K ample
       { pattern: /mimo/i,           limit: 32_768 }  # MiMo-V2.5: max_completion_tokens=32768; full default ceiling

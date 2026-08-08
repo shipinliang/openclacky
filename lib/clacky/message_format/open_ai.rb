@@ -220,18 +220,20 @@ module Clacky
 
         if model.to_s.match?(/^glm-[45]/i)
           # GLM (Zhipu / Z.ai) supports a native top-level "thinking" field
-          # ({type: "enabled"|"disabled"}) plus a restricted reasoning_effort
-          # that only accepts "max" or "high". Other effort levels collapse
-          # to "high". Send both fields so GLM activates thinking correctly.
+          # ({type: "enabled"|"disabled"}) plus a reasoning_effort that
+          # accepts four levels: low / medium / high / max.
+          # Verified against the live Coding Plan endpoint — reasoning_tokens
+          # scale monotonically across all four levels (low < medium < high <
+          # max), so each level is passed through unchanged. Earlier versions
+          # collapsed low/medium to high, which silently over-spent tokens.
           if %w[off nothink disabled].include?(effort_str)
             body[:thinking] = { type: "disabled" }
           elsif !effort_str.empty?
             glm_effort =
               case effort_str
               when "max", "xhigh" then "max"
-              when "high"          then "high"
-              when "medium", "low" then "high"   # GLM collapses these to "high"
-              else                      "max"
+              when "low", "medium", "high" then effort_str
+              else "max"
               end
             body[:thinking] = { type: "enabled" }
             body[:reasoning_effort] = glm_effort

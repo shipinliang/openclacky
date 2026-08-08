@@ -174,12 +174,20 @@ RSpec.describe Clacky::MessageFormat::OpenAI do
         expect(body[:reasoning_effort]).to eq("max")
       end
 
-      it "collapses 'medium' to thinking enabled + reasoning_effort high" do
+      it "passes 'medium' through unchanged to reasoning_effort medium" do
         body = described_class.build_request_body(
           messages, model, tools, max_tokens, false, reasoning_effort: "medium"
         )
         expect(body[:thinking]).to eq({ type: "enabled" })
-        expect(body[:reasoning_effort]).to eq("high")
+        expect(body[:reasoning_effort]).to eq("medium")
+      end
+
+      it "passes 'low' through unchanged to reasoning_effort low" do
+        body = described_class.build_request_body(
+          messages, model, tools, max_tokens, false, reasoning_effort: "low"
+        )
+        expect(body[:thinking]).to eq({ type: "enabled" })
+        expect(body[:reasoning_effort]).to eq("low")
       end
 
       it "maps 'off' to thinking disabled without reasoning_effort" do

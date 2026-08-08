@@ -618,9 +618,9 @@ RSpec.describe Clacky::Providers do
   end
 
   describe ".max_output_for" do
-    it "returns 65_536 for GLM models" do
-      expect(described_class.max_output_for("glm-5.2")).to eq(65_536)
-      expect(described_class.max_output_for("glm-5.1")).to eq(65_536)
+    it "returns 131_072 for GLM models (official 128K output ceiling)" do
+      expect(described_class.max_output_for("glm-5.2")).to eq(131_072)
+      expect(described_class.max_output_for("glm-5.1")).to eq(131_072)
     end
 
     it "returns 65_536 for Kimi K3 models" do
