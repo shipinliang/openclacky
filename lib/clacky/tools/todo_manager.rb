@@ -78,6 +78,17 @@ module Clacky
       # Coerce scalar/array/nil into an Array. Filters nil entries.
       private def normalize_to_array(value)
         return [] if value.nil?
+        
+        # Handle JSON-serialized arrays (e.g., "[\"a\",\"b\"]" from LLM)
+        if value.is_a?(String) && value.start_with?("[")
+          begin
+            parsed = JSON.parse(value)
+            return Array(parsed).reject(&:nil?) if parsed.is_a?(Array)
+          rescue JSON::ParserError
+            # Not valid JSON, fall through to default handling
+          end
+        end
+        
         Array(value).reject(&:nil?)
       end
 

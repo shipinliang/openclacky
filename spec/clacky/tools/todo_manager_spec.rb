@@ -81,6 +81,42 @@ RSpec.describe Clacky::Tools::TodoManager do
         expect(result[:todos][1][:task]).to eq("Task 2")
       end
 
+      it "handles JSON-serialized array strings from LLM" do
+        storage = []
+        # LLM sometimes double-serializes arrays as JSON strings
+        result = tool.execute(
+          action: "add",
+          task: "[\"Task 1\",\"Task 2\",\"Task 3\"]",
+          todos_storage: storage
+        )
+
+        expect(result[:todos].size).to eq(3)
+        expect(result[:todos][0][:task]).to eq("Task 1")
+        expect(result[:todos][1][:task]).to eq("Task 2")
+        expect(result[:todos][2][:task]).to eq("Task 3")
+        expect(storage.size).to eq(3)
+      end
+
+      it "handles JSON-serialized integer array strings for ids" do
+        storage = []
+        # Pre-populate with some todos
+        tool.execute(action: "add", task: "Task A", todos_storage: storage)
+        tool.execute(action: "add", task: "Task B", todos_storage: storage)
+        tool.execute(action: "add", task: "Task C", todos_storage: storage)
+
+        # Complete via JSON-serialized array string
+        result = tool.execute(
+          action: "complete",
+          id: "[1,3]",
+          todos_storage: storage
+        )
+
+        expect(result[:completed].size).to eq(2)
+        expect(storage[0][:status]).to eq("completed")
+        expect(storage[1][:status]).to eq("pending")
+        expect(storage[2][:status]).to eq("completed")
+      end
+
       it "tolerates unknown extra keyword args (e.g. legacy clients)" do
         storage = []
         # **_extra should swallow these without raising
